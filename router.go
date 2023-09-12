@@ -401,7 +401,9 @@ func (r *Router) Lookup(method, path string) (Handle, Params, bool) {
 		if ps == nil {
 			return handle, nil, tsr
 		}
-		return handle, *ps, tsr
+		ret := *ps
+		r.putParams(ps)
+		return handle, ret, tsr
 	}
 	return nil, nil, false
 }

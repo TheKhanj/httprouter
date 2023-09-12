@@ -507,6 +507,12 @@ func TestRouterLookup(t *testing.T) {
 	wantParams := Params{Param{"name", "gopher"}}
 
 	router := New()
+	poolSize := 0
+	router.paramsPool.New = func() interface{} {
+		poolSize++
+		ps := make(Params, 0, 1)
+		return &ps
+	}
 
 	// try empty router first
 	handle, _, tsr := router.Lookup(http.MethodGet, "/nope")
@@ -562,6 +568,16 @@ func TestRouterLookup(t *testing.T) {
 	}
 	if tsr {
 		t.Error("Got wrong TSR recommendation!")
+	}
+
+	_, _, _ = router.Lookup(http.MethodGet, "/user/1")
+	_, _, _ = router.Lookup(http.MethodGet, "/user/2")
+	_, _, _ = router.Lookup(http.MethodGet, "/user/3")
+	_, _, _ = router.Lookup(http.MethodGet, "/user/4")
+
+	// one is expected for parameter
+	if poolSize != 1 {
+		t.Errorf("Got %d number as params pool size instead of zero!", poolSize)
 	}
 }
 
